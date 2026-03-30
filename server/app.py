@@ -73,26 +73,38 @@ class Logout(Resource):
         
         return {}, 204
 
-class CheckSession(Resource):
+# class CheckSession(Resource):
 
-    def get(self):
+#     def get(self):
         
-        user_id = session['user_id']
+#         user_id = session['user_id']
+#         if user_id:
+#             user = User.query.filter(User.id == user_id).first()
+#             return UserSchema().dump(user), 200
+        
+#         return {}, 401
+
+class CheckSession(Resource):
+    def get(self):
+        user_id = session.get('user_id')
         if user_id:
             user = User.query.filter(User.id == user_id).first()
             return UserSchema().dump(user), 200
-        
         return {}, 401
 
 class MemberOnlyIndex(Resource):
-    
     def get(self):
-        pass
+        if not session.get('user_id'):
+            return {'message': 'Unauthorized'}, 401
+        articles = [ArticleSchema().dump(a) for a in Article.query.filter_by(is_member_only=True).all()]
+        return articles, 200
 
 class MemberOnlyArticle(Resource):
-    
     def get(self, id):
-        pass
+        if not session.get('user_id'):
+            return {'message': 'Unauthorized'}, 401
+        article = Article.query.get(id)
+        return ArticleSchema().dump(article), 200
 
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
